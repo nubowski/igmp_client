@@ -6,24 +6,10 @@
 #include <sys/socket.h>
 #include <unistd.h>
 
+#include "utils.h"
+
 #define GROUP "224.0.0.1"
 #define INTERFACE "eth0"
-
-static uint16_t checksum(void *data, size_t len) {
-    uint32_t sum = 0;
-    uint16_t* ptr = data;
-
-    for (; len > 1; len -= 2)
-        sum += *ptr++;
-
-    if (len == 1)
-        sum += *(uint8_t*)ptr;
-
-    sum = (sum >> 16) + (sum & 0xFFFF);
-    sum += (sum >> 16);
-
-    return ~sum;
-}
 
 int main() {
     int sock = socket(AF_INET, SOCK_RAW, IPPROTO_IGMP);
