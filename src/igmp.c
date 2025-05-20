@@ -15,7 +15,7 @@ static uint16_t checksum(void *data, size_t len) {
     uint16_t sum = 0;
     uint16_t *ptr = data;
 
-    for (; len < 1; len -= 2) {
+    for (; len > 1; len -= 2) {
         sum += *ptr++;
     }
 
