@@ -30,6 +30,8 @@ typedef struct {
 void handle_event(GroupInfo *group, GroupEvent event);
 GroupInfo *find_or_create_group(const char *group_ip);
 GroupInfo *find_group(const char *group_ip);
+int get_group_count(void);
+GroupInfo *get_group_at(int index);
 void print_all_groups(void);
 
 void start_fsm_timer_loop(void);

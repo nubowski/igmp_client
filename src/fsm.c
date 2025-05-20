@@ -88,6 +88,17 @@ GroupInfo *find_group(const char *group_ip) {
     return NULL;
 }
 
+int get_group_count(void) {
+    return group_count;
+}
+
+GroupInfo *get_group_at(int index) {
+    if (index >= 0 && index < group_count) {
+        return &group_states[index];
+    }
+    return NULL;
+}
+
 void print_all_groups(void) {
     printf("[FSM] Current group states:\n");
     for (int i = 0; i < group_count; i++) {

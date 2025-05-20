@@ -53,6 +53,7 @@ void send_igmp_reports(const ClientConfig *cfg) {
     close(sock);
 }
 
+// TODO: rework for some readability
 void handle_igmp_packet(const uint8_t *data, size_t len) {
     if (len < sizeof(struct igmp)) {
         printf("[RECV] Invalid IGMP packet, too short: %zu bytes\n", len);
@@ -64,7 +65,22 @@ void handle_igmp_packet(const uint8_t *data, size_t len) {
     if (pkt->igmp_type == IGMP_TYPE_MEMBERSHIP_QUERY) {     // 0x11
         char group[INET_ADDRSTRLEN];
         inet_ntop(AF_INET, &pkt->igmp_group, group, sizeof(group));
-        printf("[RECV] IGMPv2 Query received for group %s\n", group);
+
+        // TODO: double check if we could compare `0.0.0.0` and be OK with that
+        if (strcmp(group, "0.0.0.0") == 0) {
+            printf("[RECV] IGMPv2 General Query\n");
+            // apply to all known groups
+            for (int i = 0; i < get_group_count(); i++) {
+                GroupInfo *g = get_group_at(i);
+                handle_event(g, EV_QUERY_RECEIVED);
+            }
+        } else {
+            printf("[RECV] IGMPv2 Group-Specific Query for group %s\n", group);
+            GroupInfo *g = find_group(group);
+            if (g) {
+                handle_event(g, EV_QUERY_RECEIVED);
+            }
+        }
 
         GroupInfo *g = find_or_create_group(group);
         if (g) {
