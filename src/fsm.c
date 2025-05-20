@@ -49,7 +49,7 @@ static const FsmEntry fsm_map[3][4] = {
 };
 
 void handle_event(GroupInfo *group, GroupEvent event) {
-    printf("[FSM] Event %d on group %s (state %d\n", event, group->group_ip, group->state);
+    printf("[FSM] Event %d on group %s (state %d)\n", event, group->group_ip, group->state);
     FsmEntry entry = fsm_map[group->state][event];
     group->state = entry.next_state;
     if (entry.action) {

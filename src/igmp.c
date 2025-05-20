@@ -39,9 +39,14 @@ void send_igmp_reports(const ClientConfig *cfg) {
 
         ssize_t sent = sendto(sock, &msg, sizeof(msg), 0, (struct sockaddr *)&dst, sizeof(dst));
         if (sent < 0) {
-            perror("sendto");
+            perror("[ERROR] sendto failed");
         } else {
             printf("Sent IGMPv2 Report to %s\n", cfg->groups[i]);
+
+            GroupInfo* g = find_or_create_group(cfg->groups[i]);
+            if (g) {
+                handle_event(g, EV_JOIN_GROUP);
+            }
         }
     }
 
