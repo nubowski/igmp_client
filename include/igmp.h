@@ -10,5 +10,6 @@ typedef struct {
 } ClientConfig;
 
 void print_config(const ClientConfig *cfg);
+void send_igmp_reports(const ClientConfig *cfg);
 
 #endif //IGMP_H

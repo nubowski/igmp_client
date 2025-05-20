@@ -39,5 +39,6 @@ int main(int argc, char *argv[]) {
     }
 
     print_config(&config);
+    send_igmp_reports(&config);
     return 0;
 }
