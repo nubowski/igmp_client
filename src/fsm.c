@@ -79,14 +79,24 @@ GroupInfo *find_or_create_group(const char *group_ip) {
     return &group_states[group_count++];
 }
 
-void start_fsm_timer_loop(void) {
-    pthread_t tid;
-    if (pthread_create(&tid, NULL, fsm_timer_thread, NULL)) {
-        perror("pthread_create");
-        exit(1);
+GroupInfo *find_group(const char *group_ip) {
+    for (int i = 0; i < group_count; i++) {
+        if (strcmp(group_states[i].group_ip, group_ip) == 0) {
+            return &group_states[i];
+        }
+    }
+    return NULL;
+}
+
+void print_all_groups(void) {
+    printf("[FSM] Current group states:\n");
+    for (int i = 0; i < group_count; i++) {
+        printf(" - %s (state=%d, timer=%dms)\n", group_states[i].group_ip,
+               group_states[i].state, group_states[i].timer_ms);
     }
 }
 
+// TODO: need some customizable cozy things
 void *fsm_timer_thread(void *arg) {
     (void)arg;
 
@@ -105,5 +115,13 @@ void *fsm_timer_thread(void *arg) {
     }
 
     return NULL;
+}
+
+void start_fsm_timer_loop(void) {
+    pthread_t tid;
+    if (pthread_create(&tid, NULL, fsm_timer_thread, NULL)) {
+        perror("pthread_create");
+        exit(1);
+    }
 }
 

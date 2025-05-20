@@ -3,6 +3,7 @@
 #include <string.h>
 #include <unistd.h>
 
+#include "cli.h"
 #include "fsm.h"
 #include "igmp.h"
 
@@ -42,6 +43,7 @@ int main(int argc, char *argv[]) {
     print_config(&config);
     send_igmp_reports(&config);
     start_fsm_timer_loop();
+    start_cli_loop();               // important to start clie stdin thread before listener
     start_igmp_listener(&config);
     return 0;
 }

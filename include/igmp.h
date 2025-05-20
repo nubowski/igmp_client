@@ -16,7 +16,6 @@ typedef struct {
     char groups[MAX_GROUPS][16];
 } ClientConfig;
 
-void print_config(const ClientConfig *cfg);                  // TODO: drop it outside to cli.h
 void send_igmp_reports(const ClientConfig *cfg);
 void start_igmp_listener(const ClientConfig *cfg);           // TODO: drop it outside to net.h
 void handle_igmp_packet(const uint8_t *data, size_t len);
