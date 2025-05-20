@@ -20,6 +20,14 @@ typedef struct {
     int timer_ms;
 } GroupInfo;
 
+typedef void (*FsmAction)(GroupInfo*);
+
+typedef struct {
+    GroupState next_state;
+    FsmAction action;
+} FsmEntry;
+
 void handle_event(GroupInfo *group, GroupEvent event);
+GroupInfo *find_or_create_group(const char *group_ip);
 
 #endif //FSM_H

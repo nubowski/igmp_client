@@ -9,6 +9,7 @@
 #include <unistd.h>
 
 #include "igmp.h"
+#include "fsm.h"
 #include "utils.h"
 
 void send_igmp_reports(const ClientConfig *cfg) {
@@ -59,5 +60,10 @@ void handle_igmp_packet(const uint8_t *data, size_t len) {
         char group[INET_ADDRSTRLEN];
         inet_ntop(AF_INET, &pkt->igmp_group, group, sizeof(group));
         printf("[RECV] IGMPv2 Query received for group %s\n", group);
+
+        GroupInfo *g = find_or_create_group(group);
+        if (g) {
+            handle_event(g, EV_QUERY_RECEIVED);
+        }
     }
 }
