@@ -12,6 +12,39 @@
 #include "fsm.h"
 #include "utils.h"
 
+void send_igmp_leave(const char *group_ip, const char *interface) {
+    int sock = socket(AF_INET, SOCK_RAW, IPPROTO_IGMP);
+    if (sock < 0) {
+        perror("socket");
+        exit(1);
+    }
+
+    if (setsockopt(sock, SOL_SOCKET, SO_BINDTODEVICE, interface, strlen(interface)) < 0) {
+        perror("SO_BINDTODEVICE (leave)");
+        close(sock);
+        return;
+    }
+
+    struct igmp msg = {0};
+    msg.igmp_type = IGMP_TYPE_LEAVE_GROUP; // 0x17
+    msg.igmp_code = 0;
+    inet_pton(AF_INET, group_ip, &msg.igmp_group);
+    msg.igmp_cksum = checksum(&msg, sizeof(msg));
+
+    struct sockaddr_in dst = {0};
+    dst.sin_family = AF_INET;
+    inet_pton(AF_INET, group_ip, &dst.sin_addr);        // RFC !!  leave messages go to 224.0.0.2 (all-routers)
+
+    ssize_t sent = sendto(sock, &msg, sizeof(msg), 0, (struct sockaddr *)&dst, sizeof(dst));
+    if (sent < 0) {
+        perror("[ERROR] sendto (leave)");
+    } else {
+        printf("Sent IGMPv2 Leave to %s via %s\n", group_ip, interface);
+    }
+
+    close(sock);
+}
+
 void send_igmp_reports(const ClientConfig *cfg) {
     int sock = socket(AF_INET, SOCK_RAW, IPPROTO_IGMP);
     if (sock < 0) {

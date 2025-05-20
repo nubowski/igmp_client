@@ -5,8 +5,12 @@
 #include <unistd.h>
 
 #include "fsm.h"
+#include "igmp.h"
 
 #define MAX_KNOWN_GROUPS 64
+
+// TODO: need to figure out better access for that
+static char current_iface[32] = "eth0";     // default interface
 
 static GroupInfo group_states[MAX_KNOWN_GROUPS];
 static int group_count = 0;
@@ -22,6 +26,7 @@ static void action_send_report(GroupInfo *group) {
 
 static void action_leave(GroupInfo *group) {
     printf("[FSM] Leaving group %s\n", group->group_ip);
+    send_igmp_leave(group->group_ip, current_iface);
 }
 
 static void action_nop(GroupInfo *group) {
@@ -134,5 +139,9 @@ void start_fsm_timer_loop(void) {
         perror("pthread_create");
         exit(1);
     }
+}
+
+void fsm_set_iface(const char *iface) {
+    strncpy(current_iface, iface, sizeof(current_iface) - 1);
 }
 

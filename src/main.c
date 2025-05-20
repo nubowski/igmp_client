@@ -41,6 +41,9 @@ int main(int argc, char *argv[]) {
     }
 
     print_config(&config);
+
+    fsm_set_iface(config.interface);
+
     send_igmp_reports(&config);
     start_fsm_timer_loop();
     start_cli_loop();               // important to start clie stdin thread before listener
