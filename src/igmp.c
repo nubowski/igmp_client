@@ -10,9 +10,6 @@
 
 #include "igmp.h"
 
-
-#define IGMP_MEMBERSHIP_REPORT 0x16
-
 // chke sum (-> RFC)
 static uint16_t checksum(void *data, size_t len) {
     uint16_t sum = 0;
@@ -48,7 +45,7 @@ void send_igmp_reports(const ClientConfig *cfg) {
 
     for (int i = 0; i < cfg->group_count; i++) {
         struct igmp msg = {0};
-        msg.igmp_type = IGMP_MEMBERSHIP_REPORT;
+        msg.igmp_type = IGMP_TYPE_MEMBERSHIP_REPORT; // 0x16
         msg.igmp_code = 0;
         inet_pton(AF_INET, cfg->groups[i], &msg.igmp_group);
         msg.igmp_cksum = checksum(&msg, sizeof(msg));
@@ -66,4 +63,19 @@ void send_igmp_reports(const ClientConfig *cfg) {
     }
 
     close(sock);
+}
+
+void handle_igmp_packet(const uint8_t *data, size_t len) {
+    if (len < sizeof(struct igmp)) {
+        printf("[RECV] Invalid IGMP packet, too short: %zu bytes\n", len);
+        return;
+    }
+
+    struct igmp *pkt = (struct igmp *)data;
+
+    if (pkt->igmp_type == IGMP_TYPE_MEMBERSHIP_QUERY) {     // 0x11
+        char group[INET_ADDRSTRLEN];
+        inet_ntop(AF_INET, &pkt->igmp_group, group, sizeof(group));
+        printf("[RECV] IGMPv2 Query received for group %s\n", group);
+    }
 }
