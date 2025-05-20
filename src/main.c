@@ -3,6 +3,7 @@
 #include <string.h>
 #include <unistd.h>
 
+#include "fsm.h"
 #include "igmp.h"
 
 void print_usage(const char *prog) {
@@ -40,6 +41,7 @@ int main(int argc, char *argv[]) {
 
     print_config(&config);
     send_igmp_reports(&config);
+    start_fsm_timer_loop();
     start_igmp_listener(&config);
     return 0;
 }

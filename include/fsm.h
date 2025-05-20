@@ -29,5 +29,7 @@ typedef struct {
 
 void handle_event(GroupInfo *group, GroupEvent event);
 GroupInfo *find_or_create_group(const char *group_ip);
+void start_fsm_timer_loop(void);
+void *fsm_timer_thread(void *arg);
 
 #endif //FSM_H

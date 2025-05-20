@@ -1,5 +1,8 @@
 #include <stdio.h>
 #include <string.h>
+#include <pthread.h>
+#include <stdlib.h>
+#include <unistd.h>
 
 #include "fsm.h"
 
@@ -75,3 +78,32 @@ GroupInfo *find_or_create_group(const char *group_ip) {
     group_states[group_count].timer_ms = 0;
     return &group_states[group_count++];
 }
+
+void start_fsm_timer_loop(void) {
+    pthread_t tid;
+    if (pthread_create(&tid, NULL, fsm_timer_thread, NULL)) {
+        perror("pthread_create");
+        exit(1);
+    }
+}
+
+void *fsm_timer_thread(void *arg) {
+    (void)arg;
+
+    while (1) {
+        usleep(100 * 1000);                 // 100 ms
+
+        for (int i = 0; i < group_count; i++) {
+            GroupInfo *g = &group_states[i];
+            if (g->timer_ms > 0) {
+                g->timer_ms -= 100;
+                if (g->timer_ms <= 0) {
+                    handle_event(g, EV_TIMER_EXPIRED);
+                }
+            }
+        }
+    }
+
+    return NULL;
+}
+
