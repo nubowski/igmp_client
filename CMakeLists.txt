@@ -12,6 +12,8 @@ set(CMAKE_RUNTIME_OUTPUT_DIRECTORY ${CMAKE_SOURCE_DIR}/bin)
 
 include_directories(include)
 file(GLOB SRC_FILES "src/*.c")
+list(REMOVE_ITEM SRC_FILES "${CMAKE_SOURCE_DIR}/src/gen_query.c")
 
 add_executable(igmp_client ${SRC_FILES})
+add_executable(gen_query src/gen_query.c)
 
