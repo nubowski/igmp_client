@@ -1,0 +1,15 @@
+# Build output
+/build/
+/bin/
+/cmake-build-*/
+*.o
+*.obj
+*.exe
+
+# IDE
+.idea/
+*.swp
+
+# Dumps
+*.pcapng
+*.log
