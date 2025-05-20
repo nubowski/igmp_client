@@ -114,10 +114,5 @@ void handle_igmp_packet(const uint8_t *data, size_t len) {
                 handle_event(g, EV_QUERY_RECEIVED);
             }
         }
-
-        GroupInfo *g = find_or_create_group(group);
-        if (g) {
-            handle_event(g, EV_QUERY_RECEIVED);
-        }
     }
 }
