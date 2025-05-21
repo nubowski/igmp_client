@@ -39,8 +39,10 @@ void print_all_groups(void);
 
 void start_fsm_timer_loop(void);
 void fsm_set_max_response_time(int ms);
+int get_max_response_time(void);
 
 void fsm_set_iface(const char *iface);
 void fsm_set_igmpv1_mode(int enabled);
+int is_igmpv1_enabled(void);
 
 #endif //FSM_H

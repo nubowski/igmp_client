@@ -167,7 +167,7 @@ void fsm_set_max_response_time(int ms) {
     max_resp_time_ms = ms;
 }
 
-// TODO: need some customizable cozy things
+// RFC: Max Response Time is expressed in 1/10 seconds
 void *fsm_timer_thread(void *arg) {
     (void)arg;
 
@@ -202,5 +202,13 @@ void fsm_set_iface(const char *iface) {
 
 void fsm_set_igmpv1_mode(int enabled) {
     support_igmpv1 = enabled ? 0 : 1;
+}
+
+int get_max_response_time(void) {
+    return max_resp_time_ms;
+}
+
+int is_igmpv1_enabled(void) {
+    return support_igmpv1;
 }
 
