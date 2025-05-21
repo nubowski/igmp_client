@@ -77,6 +77,15 @@ int main(int argc, char *argv[]) {
                 return 1;
             }
 
+            // RFC: Multicast TTL = 1 || Just in case, coz its SHOULD be TTL = 1 on IPPROTO_IGMP
+            uint8_t ttl = 1;
+            if (setsockopt(sock, IPPROTO_IP, IP_MULTICAST_TTL, &ttl, sizeof(ttl)) < 0) {
+                perror("setsockopt: IP_MULTICAST_TTL");
+                close(sock);
+                free(groups);
+                return 1;
+            }
+
             struct igmp msg = {0};
             msg.igmp_type = 0x11;
             msg.igmp_code = 20;                                 // Max Resp Time (20 * 100ms = 2s)
