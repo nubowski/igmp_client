@@ -52,7 +52,7 @@ int random_uniform(int max) {
     return delay == 0 ? 1 : delay;
 }
 
-void print_startup_info(const ClientConfig *cfg) {
+void print_startup_info(const ClientConfig *cfg, int max_resp_time, int is_v1_enabled) {
     // Sexy startup banner
     printf("\n================ IGMPv2 Client =================\n");
     printf(" Interface       : %s\n", cfg->interface);
@@ -60,7 +60,7 @@ void print_startup_info(const ClientConfig *cfg) {
     for (int i = 0; i < cfg->group_count; i++) {
         printf("   - %s\n", cfg->groups[i]);
     }
-    printf(" Max Resp Time   : %d ms\n", get_max_response_time());
-    printf(" IGMPv1 Suppress : %s\n", is_igmpv1_enabled() ? "ENABLED" : "DISABLED");
+    printf(" Max Resp Time   : %d ms\n", max_resp_time);
+    printf(" IGMPv1 Suppress : %s\n", is_v1_enabled ? "ENABLED" : "DISABLED");
     printf("===============================================\n\n");
 }

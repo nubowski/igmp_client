@@ -70,7 +70,7 @@ int main(int argc, char *argv[]) {
 
 
     // Bootstrap
-    print_startup_info(&config);
+    print_startup_info(&config, get_max_response_time(), is_igmpv1_enabled());
 
     fsm_set_iface(config.interface);
     send_igmp_reports(&config);
