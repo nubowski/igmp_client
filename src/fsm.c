@@ -10,7 +10,7 @@
 
 #define MAX_KNOWN_GROUPS 64
 
-static int max_resp_time_ms = 2000;           // max value 1byte ~ 25500ms, but RFC: 1000-2000ms
+static int max_resp_time_ms = 2000;                 // max value 1byte ~ 25500ms, but RFC: 1000-2000ms
 
 // TODO: need to figure out better access for that
 static char current_iface[32] = "eth0";             // default interface
@@ -26,11 +26,16 @@ static void action_join(GroupInfo *group) {
 static void action_send_report(GroupInfo *group) {
     printf("[FSM] Sending report to group %s\n", group->group_ip);
     send_igmp_report(group->group_ip, current_iface);
+    group->last_reporter = 1;  // RFC: set flag
 }
 
 static void action_leave(GroupInfo *group) {
     printf("[FSM] Leaving group %s\n", group->group_ip);
-    send_igmp_leave(group->group_ip, current_iface);
+    if (group->last_reporter) {
+        send_igmp_leave(group->group_ip, current_iface);
+    } else {
+        printf("[FSM] Not last reporter — skipping Leave\n");
+    }
 }
 
 static void action_reset_timer(GroupInfo *group) {
@@ -46,6 +51,7 @@ static void action_reset_timer(GroupInfo *group) {
 
 static void action_stop_timer(GroupInfo *group) {
     group->timer_ms = 0;
+    group->last_reporter = 0;  // RFC: clear flag
     printf("[FSM] Report received for %s → timer stopped (suppression)\n", group->group_ip);
 }
 
@@ -143,8 +149,11 @@ GroupInfo *get_group_at(int index) {
 void print_all_groups(void) {
     printf("[FSM] Current group states:\n");
     for (int i = 0; i < group_count; i++) {
-        printf(" - %s (state=%d, timer=%dms)\n", group_states[i].group_ip,
-               group_states[i].state, group_states[i].timer_ms);
+        printf(" - %s (state=%d, timer=%dms, last_reporter=%d)\n",
+               group_states[i].group_ip,
+               group_states[i].state,
+               group_states[i].timer_ms,
+               group_states[i].last_reporter);
     }
 }
 

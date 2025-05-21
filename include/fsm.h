@@ -19,6 +19,7 @@ typedef struct {
     char group_ip[16];
     GroupState state;
     int timer_ms;
+    int last_reporter;
 } GroupInfo;
 
 typedef void (*FsmAction)(GroupInfo*);
