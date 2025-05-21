@@ -7,6 +7,7 @@
 #include "cli.h"
 #include "fsm.h"
 #include "igmp.h"
+#include "utils.h"
 
 void print_usage(const char *prog) {
     printf("Usage: %s -i <interface> -g <group> [-g <group2> ...]\n", prog);
@@ -33,12 +34,11 @@ int main(int argc, char *argv[]) {
                 config.group_count++;
                 break;
             case 't':
-                char *endptr;
-                long val = strtol(optarg, &endptr, 10);
-                if (*endptr != '\0' || val <= 0 || val > 255000) {
+                int val = 0;
+                if (!parse_int(optarg, &val) || val <= 0 || val > 255000) {
                     fprintf(stderr, "Invalid max response time. Should be [1-255000]. Falling to default 2000.\n");
                 } else {
-                    fsm_set_max_response_time((int)val);
+                    fsm_set_max_response_time(val);
                 }
                 break;
             default:

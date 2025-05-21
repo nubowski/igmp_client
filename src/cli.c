@@ -6,6 +6,7 @@
 
 #include "fsm.h"
 #include "cli.h"
+#include "utils.h"
 
 // func ptr
 typedef void (*CliCommandHandler)(const char *args);
@@ -86,9 +87,9 @@ static void cmd_set_resp(const char *args) {
         return;
     }
 
-    int val = atoi(args);
-    if (val < 1 || val > 255000) {
-        printf("Invalid response time: %d. Must be [1-255000]\n", val);
+    int val = 0;
+    if (!parse_int(args, &val) || val < 1 || val > 255000) {
+        printf("Invalid response time. Must be integer in range [1-255000]\n");
         return;
     }
 
