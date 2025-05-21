@@ -22,6 +22,7 @@ static void action_join(GroupInfo *group) {
 
 static void action_send_report(GroupInfo *group) {
     printf("[FSM] Sending report to group %s\n", group->group_ip);
+    send_igmp_report(group->group_ip, current_iface);
 }
 
 static void action_leave(GroupInfo *group) {
