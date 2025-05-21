@@ -9,8 +9,8 @@
 
 #define DEFAULT_GROUP "0.0.0.0"
 #define INTERFACE "eth0"
-#define QUERY_INTERVAL_SEC 2
-#define REPEAT_COUNT 5
+#define QUERY_INTERVAL_SEC 4
+#define REPEAT_COUNT 30
 
 static uint16_t checksum(void *data, size_t len) {
     uint16_t sum = 0;

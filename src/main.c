@@ -35,14 +35,29 @@ int main(int argc, char *argv[]) {
                 strncpy(config.interface, optarg, sizeof(config.interface) - 1);
                 break;
             case 'g':
-                // add IP groups at start
-                if (config.group_count >= MAX_GROUPS) {
-                    fprintf(stderr, "Too many groups (max %d)\n", MAX_GROUPS);
-                    exit(1);
+                // args count (`optarg`) + how many after `-g`
+                int group_argc = 1;
+                while (optind < argc && argv[optind][0] != '-') {
+                    group_argc++;
+                    optind++;
                 }
-                int index = config.group_count;
-                strncpy(config.groups[index], optarg, sizeof(config.groups[index]) - 1);
-                config.group_count++;
+
+                // back to start
+                optind -= group_argc - 1;
+
+                for (int i = 0; i < group_argc; i++) {
+                    const char *ip = (i == 0) ? optarg : argv[optind++];
+                    if (config.group_count >= MAX_GROUPS) {
+                        fprintf(stderr, "Too many groups (max %d)\n", MAX_GROUPS);
+                        exit(1);
+                    }
+                    if (!is_valid_ipv4(ip)) {
+                        fprintf(stderr, "Invalid IP address: %s\n", ip);
+                        exit(1);
+                    }
+                    strncpy(config.groups[config.group_count], ip, sizeof(config.groups[0]) - 1);
+                    config.group_count++;
+                }
                 break;
             case 't':
                 // add Max Resp Time
@@ -70,7 +85,7 @@ int main(int argc, char *argv[]) {
 
 
     // Bootstrap
-    print_startup_info(&config, get_max_response_time(), is_igmpv1_enabled());
+    print_status_info(&config, get_max_response_time(), is_igmpv1_enabled());
 
     fsm_set_iface(config.interface);
     send_igmp_reports(&config);

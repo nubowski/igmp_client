@@ -12,7 +12,7 @@
 #define BUFFER_SIZE 1500           // MTU -> 1500 bytes
 
 void start_igmp_listener(const ClientConfig *cfg) {
-    int sock = socket(AF_INET, SOCK_RAW, IPPROTO_IGMP);
+    int sock = socket(AF_INET, SOCK_RAW, IPPROTO_IGMP); // TTL = 1 already
     if (sock < 0) {
         perror("listener socket");
         exit(1);
@@ -30,9 +30,6 @@ void start_igmp_listener(const ClientConfig *cfg) {
     while (1) {
         uint8_t buffer[BUFFER_SIZE];
         ssize_t len = recv(sock, buffer, sizeof(buffer), 0);
-
-        printf("[DEBUG] Got packet len=%zd\n", len);
-        fflush(stdout);
 
         if (len < 0) {
             perror("recv");
