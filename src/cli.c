@@ -26,15 +26,17 @@ static void cmd_help(const char *args);
 static void cmd_exit(const char *args);
 static void cmd_set_resp(const char *args);
 static void cmd_status(const char *args);
+static void cmd_stop(const char *args);
 
 static CliCommand commands[] = {
     { "add",        "Join multicast group (add <ip>)",                  cmd_add },
-    { "del",        "Leave multicast group (del <ip>)",                 cmd_del },
+    { "del",        "Hard delete group (del <ip>)",                     cmd_del },
     { "print",      "Print all known groups",                           cmd_print },
     { "help",       "Show this help message",                           cmd_help },
     { "exit",       "Exit the application",                             cmd_exit },
     { "set_timer",  "Set max response time in ms (set_timer <ms>)",     cmd_set_resp },
     { "status",     "Show current status",                              cmd_status },
+    { "stop",     "Leave multicast group (stop <ip>)",                  cmd_stop },
 };
 
 static const int command_count = sizeof(commands) / sizeof(commands[0]);
@@ -77,6 +79,21 @@ static void cmd_del(const char *args) {
     } else {
         printf("Failed to remove group %s\n", args);
     }
+}
+
+static void cmd_stop(const char *args) {
+    if (!args) {
+        printf("Usage: stop <group_ip>\n");
+        return;
+    }
+
+    GroupInfo *g = find_group(args);
+    if (!g) {
+        printf("Group not found: %s\n", args);
+        return;
+    }
+
+    handle_event(g, EV_LEAVE_GROUP);
 }
 
 static void cmd_print(const char *args) {
@@ -144,7 +161,7 @@ static void cmd_status(const char *args) {
         }
     }
 
-    print_startup_info(&cfg, get_max_response_time(), is_igmpv1_enabled());
+    print_status_info(&cfg, get_max_response_time(), is_igmpv1_enabled());
 }
 
 // --- CLI loop thread --- //
@@ -197,7 +214,7 @@ void start_cli_loop(void) {
     }
 }
 
-void print_startup_info(const ClientConfig *cfg, int max_resp_time, int is_v1_enabled) {
+void print_status_info(const ClientConfig *cfg, int max_resp_time, int is_v1_enabled) {
     printf(ANSI_BOLD ANSI_CYAN "\n╔═══════════════════════════════════════════════╗\n");
     printf("║               IGMPv2 Client Started           ║\n");
     printf("╠═══════════════════════════════════════════════╣\n" ANSI_RESET);
@@ -206,7 +223,13 @@ void print_startup_info(const ClientConfig *cfg, int max_resp_time, int is_v1_en
 
     printf(ANSI_YELLOW " Multicast groups" ANSI_RESET ":\n");
     for (int i = 0; i < cfg->group_count; i++) {
-        printf("   " ANSI_GREEN "•" ANSI_RESET " %s\n", cfg->groups[i]);
+        GroupInfo *g = get_group_at(i);
+
+        const char *dot_color = (g && g->state != NON_MEMBER)
+            ? ANSI_GREEN "•"
+            : ANSI_RED   "•";
+
+        printf("   %s" ANSI_RESET " %s\n", dot_color, cfg->groups[i]);
     }
 
     printf(ANSI_YELLOW " Max Resp Time   " ANSI_RESET ": %d ms\n", max_resp_time);
