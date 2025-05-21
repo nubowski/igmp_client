@@ -35,8 +35,13 @@ static void action_leave(GroupInfo *group) {
 
 static void action_reset_timer(GroupInfo *group) {
     int delay = random_uniform(max_resp_time_ms);
-    group->timer_ms = delay;
-    printf("[FSM] Refreshed timer for group %s to %dms\n", group->group_ip, delay);
+    if (delay < group->timer_ms) {
+        group->timer_ms = delay;
+        printf("[FSM] Timer reset for group %s to %dms\n", group->group_ip, delay);
+    } else {
+        printf("[FSM] Timer NOT reset for group %s (delay=%d >= current=%d)\n",
+               group->group_ip, delay, group->timer_ms);
+    }
 }
 
 static void action_stop_timer(GroupInfo *group) {
