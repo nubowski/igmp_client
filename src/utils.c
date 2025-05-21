@@ -1,10 +1,10 @@
 #include <stdio.h>
 #include <stdlib.h>
+#include <stdint.h>
 #include <errno.h>
 #include <limits.h>
 
 #include "utils.h"
-#include "fsm.h"
 
 uint16_t checksum(void *data, size_t len) {
     uint16_t sum = 0;
@@ -50,23 +50,4 @@ int random_uniform(int max) {
     double fraction = (double)rand() / ((double)RAND_MAX + 1);
     int delay = (int)(fraction * max);
     return delay == 0 ? 1 : delay;
-}
-
-void print_startup_info(const ClientConfig *cfg, int max_resp_time, int is_v1_enabled) {
-    printf(ANSI_BOLD ANSI_CYAN "\n╔═══════════════════════════════════════════════╗\n");
-    printf("║               IGMPv2 Client Started           ║\n");
-    printf("╠═══════════════════════════════════════════════╣\n" ANSI_RESET);
-
-    printf(ANSI_YELLOW " Interface       " ANSI_RESET ": %s\n", cfg->interface);
-
-    printf(ANSI_YELLOW " Multicast groups" ANSI_RESET ":\n");
-    for (int i = 0; i < cfg->group_count; i++) {
-        printf("   " ANSI_GREEN "•" ANSI_RESET " %s\n", cfg->groups[i]);
-    }
-
-    printf(ANSI_YELLOW " Max Resp Time   " ANSI_RESET ": %d ms\n", max_resp_time);
-    printf(ANSI_YELLOW " IGMPv1 Suppress " ANSI_RESET ": %s\n",
-           is_v1_enabled ? ANSI_GREEN "ENABLED" ANSI_RESET : ANSI_MAGENTA "DISABLED" ANSI_RESET);
-
-    printf(ANSI_BOLD ANSI_CYAN "╚═══════════════════════════════════════════════╝\n\n" ANSI_RESET);
 }

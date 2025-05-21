@@ -156,6 +156,13 @@ GroupInfo *get_group_at(int index) {
     return NULL;
 }
 
+const char* get_group_ip_at(int index) {
+    if (index >= 0 && index < group_count) {
+        return group_states[index].group_ip;
+    }
+    return NULL;
+}
+
 void print_all_groups(void) {
     printf("[FSM] Current group states:\n");
     for (int i = 0; i < group_count; i++) {
@@ -198,6 +205,10 @@ void start_fsm_timer_loop(void) {
         perror("pthread_create");
         exit(1);
     }
+}
+
+const char* get_iface_name(void) {
+    return current_iface;
 }
 
 void fsm_set_iface(const char *iface) {

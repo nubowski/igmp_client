@@ -7,12 +7,28 @@
 #include <sys/socket.h>
 #include <unistd.h>
 
-#include "utils.h"
-
 #define DEFAULT_GROUP "0.0.0.0"
 #define INTERFACE "eth0"
 #define QUERY_INTERVAL_SEC 2
 #define REPEAT_COUNT 5
+
+static uint16_t checksum(void *data, size_t len) {
+    uint16_t sum = 0;
+    uint16_t *ptr = data;
+
+    for (; len > 1; len -= 2) {
+        sum += *ptr++;
+    }
+
+    if (len == 1) {
+        sum += *(uint8_t *)ptr;
+    }
+
+    sum = (sum >> 16) + (sum & 0xffff);
+    sum += (sum >> 16);
+
+    return ~sum;
+}
 
 int main(int argc, char *argv[]) {
     int group_count = argc > 1 ? argc - 1 : 1;

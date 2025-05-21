@@ -5,9 +5,9 @@
 #include <unistd.h>
 #include <getopt.h>
 
+#include "igmp.h"
 #include "cli.h"
 #include "fsm.h"
-#include "igmp.h"
 #include "utils.h"
 
 // CLI help

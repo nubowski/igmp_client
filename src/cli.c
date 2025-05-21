@@ -4,6 +4,7 @@
 #include <pthread.h>
 #include <unistd.h>
 
+#include "igmp.h"
 #include "fsm.h"
 #include "cli.h"
 #include "utils.h"
@@ -24,6 +25,7 @@ static void cmd_print(const char *args);
 static void cmd_help(const char *args);
 static void cmd_exit(const char *args);
 static void cmd_set_resp(const char *args);
+static void cmd_status(const char *args);
 
 static CliCommand commands[] = {
     { "add",        "Join multicast group (add <ip>)",                  cmd_add },
@@ -32,6 +34,7 @@ static CliCommand commands[] = {
     { "help",       "Show this help message",                           cmd_help },
     { "exit",       "Exit the application",                             cmd_exit },
     { "set_timer",  "Set max response time in ms (set_timer <ms>)",     cmd_set_resp },
+    { "status",     "Show current status",                              cmd_status },
 };
 
 static const int command_count = sizeof(commands) / sizeof(commands[0]);
@@ -111,6 +114,25 @@ static void cmd_set_resp(const char *args) {
     printf(ANSI_GREEN "Response time set to %dms\n" ANSI_RESET, val);
 }
 
+static void cmd_status(const char *args) {
+    (void)args;
+    ClientConfig cfg = {0};
+
+    strncpy(cfg.interface, get_iface_name(), sizeof(cfg.interface) - 1);
+
+    int count = get_group_count();
+    cfg.group_count = count;
+
+    for (int i = 0; i < count; i++) {
+        const char *ip = get_group_ip_at(i);
+        if (ip) {
+            strncpy(cfg.groups[i], ip, sizeof(cfg.groups[i]) - 1);
+        }
+    }
+
+    print_startup_info(&cfg, get_max_response_time(), is_igmpv1_enabled());
+}
+
 // --- CLI loop thread --- //
 
 static void *cli_thread(void *arg) {
@@ -159,4 +181,23 @@ void start_cli_loop(void) {
         perror("pthread_create (CLI)");
         exit(1);
     }
+}
+
+void print_startup_info(const ClientConfig *cfg, int max_resp_time, int is_v1_enabled) {
+    printf(ANSI_BOLD ANSI_CYAN "\n╔═══════════════════════════════════════════════╗\n");
+    printf("║               IGMPv2 Client Started           ║\n");
+    printf("╠═══════════════════════════════════════════════╣\n" ANSI_RESET);
+
+    printf(ANSI_YELLOW " Interface       " ANSI_RESET ": %s\n", cfg->interface);
+
+    printf(ANSI_YELLOW " Multicast groups" ANSI_RESET ":\n");
+    for (int i = 0; i < cfg->group_count; i++) {
+        printf("   " ANSI_GREEN "•" ANSI_RESET " %s\n", cfg->groups[i]);
+    }
+
+    printf(ANSI_YELLOW " Max Resp Time   " ANSI_RESET ": %d ms\n", max_resp_time);
+    printf(ANSI_YELLOW " IGMPv1 Suppress " ANSI_RESET ": %s\n",
+           is_v1_enabled ? ANSI_GREEN "ENABLED" ANSI_RESET : ANSI_MAGENTA "DISABLED" ANSI_RESET);
+
+    printf(ANSI_BOLD ANSI_CYAN "╚═══════════════════════════════════════════════╝\n\n" ANSI_RESET);
 }

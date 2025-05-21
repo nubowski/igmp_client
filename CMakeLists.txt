@@ -15,5 +15,5 @@ file(GLOB SRC_FILES "src/*.c")
 list(REMOVE_ITEM SRC_FILES "${CMAKE_SOURCE_DIR}/src/gen_query.c")
 
 add_executable(igmp_client ${SRC_FILES})
-add_executable(gen_query src/gen_query.c src/utils.c)
+add_executable(gen_query scripts/gen_query.c)
 

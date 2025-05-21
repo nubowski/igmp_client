@@ -37,12 +37,14 @@ GroupInfo *find_or_create_group(const char *group_ip);
 GroupInfo *find_group(const char *group_ip);
 int get_group_count(void);
 GroupInfo *get_group_at(int index);
+const char* get_group_ip_at(int index);
 void print_all_groups(void);
 
 void start_fsm_timer_loop(void);
 void fsm_set_max_response_time(int ms);
 int get_max_response_time(void);
 
+const char* get_iface_name(void);
 void fsm_set_iface(const char *iface);
 void fsm_set_igmpv1_mode(int enabled);
 int is_igmpv1_enabled(void);
