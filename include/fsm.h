@@ -38,7 +38,7 @@ GroupInfo *find_group(const char *group_ip);
 int get_group_count(void);
 GroupInfo *get_group_at(int index);
 const char* get_group_ip_at(int index);
-void print_all_groups(void);
+int remove_group(const char *group_ip);
 
 void start_fsm_timer_loop(void);
 void fsm_set_max_response_time(int ms);

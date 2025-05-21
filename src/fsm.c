@@ -10,7 +10,7 @@
 
 #define MAX_KNOWN_GROUPS 64
 
-static int max_resp_time_ms = 2000;                 // max value 1byte ~ 25500ms, but RFC: 1000-2000ms
+static int max_resp_time_ms = 2000;                 // max value 1 byte ~ 25500ms, but RFC: 1000-2000ms
 static int support_igmpv1 = 0;                      // 0 = v1 mode, suppress Leave
 
 // TODO: need to figure out better access for that
@@ -28,7 +28,7 @@ static void action_join(GroupInfo *group) {
 static void action_send_report(GroupInfo *group) {
     printf("[FSM] Sending report to group %s\n", group->group_ip);
     send_igmp_report(group->group_ip, current_iface);
-    group->last_reporter = 1;  // RFC: set flag that we were the last host
+    group->last_reporter = 1;  // RFC: set a flag that we were the last host
 }
 
 static void action_leave(GroupInfo *group) {
@@ -163,17 +163,6 @@ const char* get_group_ip_at(int index) {
     return NULL;
 }
 
-void print_all_groups(void) {
-    printf("[FSM] Current group states:\n");
-    for (int i = 0; i < group_count; i++) {
-        printf(" - %s (state=%d, timer=%dms, last_reporter=%d)\n",
-               group_states[i].group_ip,
-               group_states[i].state,
-               group_states[i].timer_ms,
-               group_states[i].last_reporter);
-    }
-}
-
 void fsm_set_max_response_time(int ms) {
     max_resp_time_ms = ms;
 }
@@ -190,6 +179,7 @@ void *fsm_timer_thread(void *arg) {
             if (g->timer_ms > 0) {
                 g->timer_ms -= 100;
                 if (g->timer_ms <= 0) {
+                    g->timer_ms = 0;                 // fix negative nums
                     handle_event(g, EV_TIMER_EXPIRED);
                 }
             }
@@ -205,6 +195,17 @@ void start_fsm_timer_loop(void) {
         perror("pthread_create");
         exit(1);
     }
+}
+
+int remove_group(const char *group_ip) {
+    for (int i = 0; i < group_count; i++) {
+        if (strcmp(group_states[i].group_ip, group_ip) == 0) {
+            group_states[i] = group_states[group_count - 1];    // back-swap
+            group_count--;
+            return 1;
+        }
+    }
+    return 0;
 }
 
 const char* get_iface_name(void) {

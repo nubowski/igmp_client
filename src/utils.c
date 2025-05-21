@@ -1,5 +1,6 @@
 #include <stdio.h>
 #include <stdlib.h>
+#include <arpa/inet.h>
 #include <stdint.h>
 #include <errno.h>
 #include <limits.h>
@@ -50,4 +51,18 @@ int random_uniform(int max) {
     double fraction = (double)rand() / ((double)RAND_MAX + 1);
     int delay = (int)(fraction * max);
     return delay == 0 ? 1 : delay;
+}
+
+int is_valid_ipv4(const char *ip) {
+    struct sockaddr_in sa;
+    return inet_pton(AF_INET, ip, &sa.sin_addr) == 1;
+}
+
+const char* state_to_str(GroupState s) {
+    switch (s) {
+        case NON_MEMBER: return "NON_MEMBER";
+        case DELAYING_MEMBER: return "DELAYING_MEMBER";
+        case IDLE_MEMBER: return "IDLE_MEMBER";
+        default: return "UNKNOWN";
+    }
 }

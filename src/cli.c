@@ -47,6 +47,11 @@ static void cmd_add(const char *args) {
         return;
     }
 
+    if (!is_valid_ipv4(args)) {
+        printf("Invalid IP address format: %s\n", args);
+        return;
+    }
+
     GroupInfo *g = find_or_create_group(args);
     if (g) {
         handle_event(g, EV_JOIN_GROUP);
@@ -60,8 +65,17 @@ static void cmd_del(const char *args) {
     }
 
     GroupInfo *g = find_group(args);
-    if (g) {
-        handle_event(g, EV_LEAVE_GROUP);
+    if (!g) {
+        printf("Group not found: %s\n", args);
+        return;
+    }
+
+    handle_event(g, EV_LEAVE_GROUP);
+
+    if (remove_group(args)) {
+        printf("Group %s removed from list.\n", args);
+    } else {
+        printf("Failed to remove group %s\n", args);
     }
 }
 
@@ -200,4 +214,43 @@ void print_startup_info(const ClientConfig *cfg, int max_resp_time, int is_v1_en
            is_v1_enabled ? ANSI_GREEN "ENABLED" ANSI_RESET : ANSI_MAGENTA "DISABLED" ANSI_RESET);
 
     printf(ANSI_BOLD ANSI_CYAN "╚═══════════════════════════════════════════════╝\n\n" ANSI_RESET);
+}
+
+void print_all_groups(void) {
+    int group_count = get_group_count();
+
+    printf(ANSI_BOLD ANSI_CYAN "\n╔═══════════════════════════════════════════════╗\n");
+    printf("║              Current Group States             ║\n");
+    printf("╠═══════════════════════════════════════════════╣\n" ANSI_RESET);
+
+    printf(ANSI_YELLOW " Interface" ANSI_RESET ": %s\n", get_iface_name());
+    printf(ANSI_YELLOW " Group Count" ANSI_RESET ": %d\n\n", group_count);
+
+    if (group_count == 0) {
+        printf(ANSI_RED " No active groups.\n" ANSI_RESET);
+        printf(ANSI_BOLD ANSI_CYAN "╚═══════════════════════════════════════════════╝\n\n" ANSI_RESET);
+        return;
+    }
+
+    printf(ANSI_BOLD " %-12s  %-16s  %-8s   %-4s\n" ANSI_RESET,
+           "Group", "State", "Timer", "LR");
+
+    printf(ANSI_BOLD " %-12s  %-16s  %-8s   %-4s\n" ANSI_RESET,
+           "------", "-----", "-----", "--");
+
+    for (int i = 0; i < group_count; i++) {
+        GroupInfo *g = get_group_at(i);
+        const char *state_str = state_to_str(g->state);
+        const char *reporter_str = g->last_reporter
+            ? ANSI_GREEN "Yes" ANSI_RESET
+            : ANSI_RED   "No"  ANSI_RESET;
+
+        printf(" %-12s  %-16s  %-4dms     %-4s\n",
+               g->group_ip,
+               state_str,
+               g->timer_ms,
+               reporter_str);
+    }
+
+    printf(ANSI_BOLD ANSI_CYAN "\n╚═══════════════════════════════════════════════╝\n\n" ANSI_RESET);
 }
