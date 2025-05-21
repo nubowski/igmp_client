@@ -39,30 +39,38 @@ static void action_reset_timer(GroupInfo *group) {
     printf("[FSM] Refreshed timer for group %s to %dms\n", group->group_ip, delay);
 }
 
+static void action_stop_timer(GroupInfo *group) {
+    group->timer_ms = 0;
+    printf("[FSM] Report received for %s → timer stopped (suppression)\n", group->group_ip);
+}
+
 static void action_nop(GroupInfo *group) {
     (void) group;
     // do nothing
 }
 
 // FSM mapping state. Creating some beautiful ru4noi kolhoz
-static const FsmEntry fsm_map[3][4] = {
+static const FsmEntry fsm_map[3][5] = {
     [NON_MEMBER] = {
         [EV_JOIN_GROUP]     = { DELAYING_MEMBER,    action_join },
         [EV_LEAVE_GROUP]    = { NON_MEMBER,         action_nop },
         [EV_QUERY_RECEIVED] = { NON_MEMBER,         action_nop },
         [EV_TIMER_EXPIRED]  = { NON_MEMBER,         action_nop },
+        [EV_REPORT_RECEIVED]= { NON_MEMBER,         action_nop },
     },
     [DELAYING_MEMBER] = {
         [EV_JOIN_GROUP]     = { DELAYING_MEMBER,    action_join },
         [EV_LEAVE_GROUP]    = { NON_MEMBER,         action_leave },
         [EV_QUERY_RECEIVED] = { DELAYING_MEMBER,    action_reset_timer },
         [EV_TIMER_EXPIRED]  = { NON_MEMBER,         action_send_report },
+        [EV_REPORT_RECEIVED]= { IDLE_MEMBER,        action_stop_timer },
     },
     [IDLE_MEMBER] = {
         [EV_JOIN_GROUP]     = { IDLE_MEMBER,        action_nop },
         [EV_LEAVE_GROUP]    = { NON_MEMBER,         action_leave },
         [EV_QUERY_RECEIVED] = { DELAYING_MEMBER,    action_join },
         [EV_TIMER_EXPIRED]  = { IDLE_MEMBER,        action_nop },
+        [EV_REPORT_RECEIVED]= { IDLE_MEMBER,        action_nop },
     }
 };
 

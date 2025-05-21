@@ -127,25 +127,36 @@ void handle_igmp_packet(const uint8_t *data, size_t len) {
     }
 
     struct igmp *pkt = (struct igmp *)data;
+    char group[INET_ADDRSTRLEN];
+    inet_ntop(AF_INET, &pkt->igmp_group, group, sizeof(group));
 
-    if (pkt->igmp_type == IGMP_TYPE_MEMBERSHIP_QUERY) {     // 0x11
-        char group[INET_ADDRSTRLEN];
-        inet_ntop(AF_INET, &pkt->igmp_group, group, sizeof(group));
-
-        // TODO: double check if we could compare `0.0.0.0` and be OK with that
-        if (strcmp(group, "0.0.0.0") == 0) {
-            printf("[RECV] IGMPv2 General Query\n");
-            // apply to all known groups
-            for (int i = 0; i < get_group_count(); i++) {
-                GroupInfo *g = get_group_at(i);
-                handle_event(g, EV_QUERY_RECEIVED);
+    switch (pkt->igmp_type) {
+        case IGMP_TYPE_MEMBERSHIP_QUERY:  // 0x11
+            if (strcmp(group, "0.0.0.0") == 0) {
+                printf("[RECV] IGMPv2 General Query\n");
+                for (int i = 0; i < get_group_count(); i++) {
+                    GroupInfo *g = get_group_at(i);
+                    handle_event(g, EV_QUERY_RECEIVED);
+                }
+            } else {
+                printf("[RECV] IGMPv2 Group-Specific Query for group %s\n", group);
+                GroupInfo *g = find_group(group);
+                if (g) {
+                    handle_event(g, EV_QUERY_RECEIVED);
+                }
             }
-        } else {
-            printf("[RECV] IGMPv2 Group-Specific Query for group %s\n", group);
+            break;
+
+        case IGMP_TYPE_MEMBERSHIP_REPORT: // 0x16
+            printf("[RECV] IGMPv2 Report for group %s\n", group);
             GroupInfo *g = find_group(group);
             if (g) {
-                handle_event(g, EV_QUERY_RECEIVED);
+                handle_event(g, EV_REPORT_RECEIVED);
             }
-        }
+            break;
+
+        default:
+            printf("[RECV] Unknown IGMP type: 0x%02x\n", pkt->igmp_type);
+            break;
     }
 }

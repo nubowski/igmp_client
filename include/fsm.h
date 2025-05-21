@@ -11,7 +11,8 @@ typedef enum {
     EV_JOIN_GROUP,
     EV_LEAVE_GROUP,
     EV_QUERY_RECEIVED,
-    EV_TIMER_EXPIRED
+    EV_TIMER_EXPIRED,
+    EV_REPORT_RECEIVED
 } GroupEvent;
 
 typedef struct {
