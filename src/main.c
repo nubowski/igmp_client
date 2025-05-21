@@ -18,7 +18,7 @@ int main(int argc, char *argv[]) {
     ClientConfig config = {0};
 
     int opt;
-    while ((opt = getopt(argc, argv, "i:g:")) != -1) {
+    while ((opt = getopt(argc, argv, "i:g:t:")) != -1) {
         switch (opt) {
             case 'i':
                 strncpy(config.interface, optarg, sizeof(config.interface) - 1);
@@ -31,6 +31,15 @@ int main(int argc, char *argv[]) {
                 int index = config.group_count;
                 strncpy(config.groups[index], optarg, sizeof(config.groups[index]) - 1);
                 config.group_count++;
+                break;
+            case 't':
+                char *endptr;
+                long val = strtol(optarg, &endptr, 10);
+                if (*endptr != '\0' || val <= 0 || val > 255000) {
+                    fprintf(stderr, "Invalid max response time. Should be [1-255000]. Falling to default 2000.\n");
+                } else {
+                    fsm_set_max_response_time((int)val);
+                }
                 break;
             default:
                 print_usage(argv[0]);

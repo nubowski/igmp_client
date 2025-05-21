@@ -22,13 +22,15 @@ static void cmd_del(const char *args);
 static void cmd_print(const char *args);
 static void cmd_help(const char *args);
 static void cmd_exit(const char *args);
+static void cmd_set_resp(const char *args);
 
 static CliCommand commands[] = {
-    { "add",   "Join multicast group (add <ip>)",   cmd_add },
-    { "del",   "Leave multicast group (del <ip>)",  cmd_del },
-    { "print", "Print all known groups",            cmd_print },
-    { "help",  "Show this help message",            cmd_help },
-    { "exit",  "Exit the application",              cmd_exit }
+    { "add",   "Join multicast group (add <ip>)",                         cmd_add },
+    { "del",   "Leave multicast group (del <ip>)",                        cmd_del },
+    { "print", "Print all known groups",                                cmd_print },
+    { "help",  "Show this help message",                                 cmd_help },
+    { "exit",  "Exit the application",                                   cmd_exit },
+    { "set_timer",  "Set max response time in ms (set_timer <ms>)"  ,cmd_set_resp },
 };
 
 static const int command_count = sizeof(commands) / sizeof(commands[0]);
@@ -76,6 +78,22 @@ static void cmd_exit(const char *args) {
     (void)args;
     printf("Shutting down...\n");
     exit(0);
+}
+
+static void cmd_set_resp(const char *args) {
+    if (!args) {
+        printf("Usage: set_resp <ms> [1-255000]\n");
+        return;
+    }
+
+    int val = atoi(args);
+    if (val < 1 || val > 255000) {
+        printf("Invalid response time: %d. Must be [1-255000]\n", val);
+        return;
+    }
+
+    fsm_set_max_response_time(val);
+    printf("Response time set to %dms\n", val);
 }
 
 // --- CLI loop thread --- //

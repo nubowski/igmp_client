@@ -9,7 +9,7 @@
 
 #define MAX_KNOWN_GROUPS 64
 
-static const int MAX_RESP_TIME_MS = 2000;           // max value 1byte ~ 25500ms, but RFC: 1000-2000ms
+static int max_resp_time_ms = 2000;           // max value 1byte ~ 25500ms, but RFC: 1000-2000ms
 
 // TODO: need to figure out better access for that
 static char current_iface[32] = "eth0";             // default interface
@@ -18,7 +18,7 @@ static GroupInfo group_states[MAX_KNOWN_GROUPS];
 static int group_count = 0;
 
 static void action_join(GroupInfo *group) {
-    int delay = rand() % MAX_RESP_TIME_MS;
+    int delay = rand() % max_resp_time_ms;
     group->timer_ms = delay;
     printf("[FSM] Joining group %s\n", group->group_ip);
 }
@@ -114,6 +114,10 @@ void print_all_groups(void) {
         printf(" - %s (state=%d, timer=%dms)\n", group_states[i].group_ip,
                group_states[i].state, group_states[i].timer_ms);
     }
+}
+
+void fsm_set_max_response_time(int ms) {
+    max_resp_time_ms = ms;
 }
 
 // TODO: need some customizable cozy things

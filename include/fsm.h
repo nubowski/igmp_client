@@ -36,6 +36,7 @@ GroupInfo *get_group_at(int index);
 void print_all_groups(void);
 
 void start_fsm_timer_loop(void);
+void fsm_set_max_response_time(int ms);
 
 void fsm_set_iface(const char *iface);
 
