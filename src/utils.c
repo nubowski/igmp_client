@@ -42,3 +42,11 @@ int parse_int(const char *str, int *out) {
     *out = (int)val;
     return 1;
 }
+
+// RFC: using a delay value chosen uniformly from the interval (0, Max Response Time]
+int random_uniform(int max) {
+    if (max <= 1) return 1;
+    double fraction = (double)rand() / ((double)RAND_MAX + 1);
+    int delay = (int)(fraction * max);
+    return delay == 0 ? 1 : delay;
+}

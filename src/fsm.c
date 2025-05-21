@@ -6,6 +6,7 @@
 
 #include "fsm.h"
 #include "igmp.h"
+#include "utils.h"
 
 #define MAX_KNOWN_GROUPS 64
 
@@ -18,8 +19,7 @@ static GroupInfo group_states[MAX_KNOWN_GROUPS];
 static int group_count = 0;
 
 static void action_join(GroupInfo *group) {
-    int delay = rand() % max_resp_time_ms;
-    group->timer_ms = delay;
+    group->timer_ms = random_uniform(max_resp_time_ms);
     printf("[FSM] Joining group %s\n", group->group_ip);
 }
 
@@ -31,6 +31,12 @@ static void action_send_report(GroupInfo *group) {
 static void action_leave(GroupInfo *group) {
     printf("[FSM] Leaving group %s\n", group->group_ip);
     send_igmp_leave(group->group_ip, current_iface);
+}
+
+static void action_reset_timer(GroupInfo *group) {
+    int delay = random_uniform(max_resp_time_ms);
+    group->timer_ms = delay;
+    printf("[FSM] Refreshed timer for group %s to %dms\n", group->group_ip, delay);
 }
 
 static void action_nop(GroupInfo *group) {
@@ -47,9 +53,9 @@ static const FsmEntry fsm_map[3][4] = {
         [EV_TIMER_EXPIRED]  = { NON_MEMBER,         action_nop },
     },
     [DELAYING_MEMBER] = {
-        [EV_JOIN_GROUP]     = { DELAYING_MEMBER,    action_join },      // drop timer
+        [EV_JOIN_GROUP]     = { DELAYING_MEMBER,    action_join },
         [EV_LEAVE_GROUP]    = { NON_MEMBER,         action_leave },
-        [EV_QUERY_RECEIVED] = { DELAYING_MEMBER,    action_nop },       // TODO: timer refresh??
+        [EV_QUERY_RECEIVED] = { DELAYING_MEMBER,    action_reset_timer },
         [EV_TIMER_EXPIRED]  = { NON_MEMBER,         action_send_report },
     },
     [IDLE_MEMBER] = {
