@@ -11,6 +11,7 @@
 #define MAX_KNOWN_GROUPS 64
 
 static int max_resp_time_ms = 2000;                 // max value 1byte ~ 25500ms, but RFC: 1000-2000ms
+static int support_igmpv1 = 0;                      // 0 = v1 mode, suppress Leave
 
 // TODO: need to figure out better access for that
 static char current_iface[32] = "eth0";             // default interface
@@ -30,7 +31,12 @@ static void action_send_report(GroupInfo *group) {
 }
 
 static void action_leave(GroupInfo *group) {
-    printf("[FSM] Leaving group %s\n", group->group_ip);
+    // RFC: If the interface state says the Querier is running IGMPv1, this action SHOULD be skipped
+    if (support_igmpv1 == 1) {
+        printf("[FSM] IGMPv1 mode → suppressing Leave\n");
+        return;
+    }
+
     if (group->last_reporter) {
         send_igmp_leave(group->group_ip, current_iface);
     } else {
@@ -192,5 +198,9 @@ void start_fsm_timer_loop(void) {
 
 void fsm_set_iface(const char *iface) {
     strncpy(current_iface, iface, sizeof(current_iface) - 1);
+}
+
+void fsm_set_igmpv1_mode(int enabled) {
+    support_igmpv1 = enabled ? 0 : 1;
 }
 

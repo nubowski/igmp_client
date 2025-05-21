@@ -3,6 +3,7 @@
 #include <string.h>
 #include <time.h>
 #include <unistd.h>
+#include <getopt.h>
 
 #include "cli.h"
 #include "fsm.h"
@@ -10,16 +11,23 @@
 #include "utils.h"
 
 void print_usage(const char *prog) {
-    printf("Usage: %s -i <interface> -g <group> [-g <group2> ...]\n", prog);
+    printf("Usage: %s -i <interface> -g <group> [-g <group2> ...] -t timer\n", prog);
+    printf("  --igmpv1, --v1      Enable IGMPv1 suppression mode\n");
 }
 
 int main(int argc, char *argv[]) {
     srand(time(NULL));
 
+    static struct option long_options[] = {
+        {"igmpv1", no_argument, NULL, 1000},   // unique int > 255
+        {"v1",     no_argument, NULL, 1000},   // alias for --igmpv1
+        {0, 0, 0, 0}
+    };
+
     ClientConfig config = {0};
 
     int opt;
-    while ((opt = getopt(argc, argv, "i:g:t:")) != -1) {
+    while ((opt = getopt_long(argc, argv, "i:g:t:", long_options, NULL)) != -1) {
         switch (opt) {
             case 'i':
                 strncpy(config.interface, optarg, sizeof(config.interface) - 1);
@@ -40,6 +48,9 @@ int main(int argc, char *argv[]) {
                 } else {
                     fsm_set_max_response_time(val);
                 }
+                break;
+            case 1000:
+                fsm_set_igmpv1_mode(1);
                 break;
             default:
                 print_usage(argv[0]);
