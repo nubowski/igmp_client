@@ -1,6 +1,7 @@
 #include <stdio.h>
 #include <stdlib.h>
 #include <string.h>
+#include <time.h>
 #include <unistd.h>
 
 #include "cli.h"
@@ -12,6 +13,8 @@ void print_usage(const char *prog) {
 }
 
 int main(int argc, char *argv[]) {
+    srand(time(NULL));
+
     ClientConfig config = {0};
 
     int opt;
