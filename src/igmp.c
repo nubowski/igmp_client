@@ -13,6 +13,11 @@
 #include "utils.h"
 
 void send_igmp_leave(const char *group_ip, const char *interface) {
+    if (strcmp(group_ip, "224.0.0.1") == 0) {
+        // RFC: never send for all-systems group
+        return;
+    }
+
     int sock = socket(AF_INET, SOCK_RAW, IPPROTO_IGMP);
     if (sock < 0) {
         perror("socket");
@@ -46,6 +51,11 @@ void send_igmp_leave(const char *group_ip, const char *interface) {
 }
 
 void send_igmp_report(const char *group_ip, const char *interface) {
+    if (strcmp(group_ip, "224.0.0.1") == 0) {
+        // RFC: never send for all-systems group
+        return;
+    }
+
     int sock = socket(AF_INET, SOCK_RAW, IPPROTO_IGMP);
     if (sock < 0) {
         perror("socket");

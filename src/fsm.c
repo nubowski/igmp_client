@@ -75,6 +75,11 @@ static const FsmEntry fsm_map[3][5] = {
 };
 
 void handle_event(GroupInfo *group, GroupEvent event) {
+    if (strcmp(group->group_ip, "224.0.0.1") == 0) {
+        // RFC: do nothing
+        return;
+    }
+
     printf("[FSM] Event %d on group %s (state %d)\n", event, group->group_ip, group->state);
     FsmEntry entry = fsm_map[group->state][event];
     group->state = entry.next_state;
@@ -97,8 +102,16 @@ GroupInfo *find_or_create_group(const char *group_ip) {
 
     // creating then
     strncpy(group_states[group_count].group_ip, group_ip, sizeof(group_states[group_count].group_ip) - 1);
-    group_states[group_count].state = NON_MEMBER;
-    group_states[group_count].timer_ms = 0;
+
+    if (strcmp(group_ip, "224.0.0.1") == 0) {
+        group_states[group_count].state = IDLE_MEMBER;
+        group_states[group_count].timer_ms = 0;
+        printf("[FSM] Initialized 224.0.0.1 as special Idle Member (static)\n");
+    } else {
+        group_states[group_count].state = NON_MEMBER;
+        group_states[group_count].timer_ms = 0;
+    }
+
     return &group_states[group_count++];
 }
 
