@@ -19,6 +19,7 @@ static char current_iface[32] = "eth0";             // default interface
 static GroupInfo group_states[MAX_KNOWN_GROUPS];
 static int group_count = 0;
 
+// RFC: Join behaves as if Group-Specific Query received → start timer
 static void action_join(GroupInfo *group) {
     group->timer_ms = random_uniform(max_resp_time_ms);
     printf("[FSM] Joining group %s\n", group->group_ip);
@@ -27,11 +28,12 @@ static void action_join(GroupInfo *group) {
 static void action_send_report(GroupInfo *group) {
     printf("[FSM] Sending report to group %s\n", group->group_ip);
     send_igmp_report(group->group_ip, current_iface);
-    group->last_reporter = 1;  // RFC: set flag
+    group->last_reporter = 1;  // RFC: set flag that we were the last host
 }
 
 static void action_leave(GroupInfo *group) {
     // RFC: If the interface state says the Querier is running IGMPv1, this action SHOULD be skipped
+    // RFC: If the flag saying we were the last host to report is cleared, this action MAY be skipped
     if (support_igmpv1 == 1) {
         printf("[FSM] IGMPv1 mode → suppressing Leave\n");
         return;
@@ -56,6 +58,7 @@ static void action_reset_timer(GroupInfo *group) {
 }
 
 static void action_stop_timer(GroupInfo *group) {
+    // No RFC directions or suggestion of holding the timer value nor its reset to 0. So timer_ms = 0 working the way we need
     group->timer_ms = 0;
     group->last_reporter = 0;  // RFC: clear flag
     printf("[FSM] Report received for %s → timer stopped (suppression)\n", group->group_ip);
@@ -67,6 +70,7 @@ static void action_nop(GroupInfo *group) {
 }
 
 // FSM mapping state. Creating some beautiful ru4noi kolhoz
+// RFC: Host State Diagram (FSM mapping)
 static const FsmEntry fsm_map[3][5] = {
     [NON_MEMBER] = {
         [EV_JOIN_GROUP]     = { DELAYING_MEMBER,    action_join },
@@ -201,7 +205,7 @@ void fsm_set_iface(const char *iface) {
 }
 
 void fsm_set_igmpv1_mode(int enabled) {
-    support_igmpv1 = enabled ? 0 : 1;
+    support_igmpv1 = enabled ? 1 : 0;
 }
 
 int get_max_response_time(void) {

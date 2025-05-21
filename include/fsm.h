@@ -1,12 +1,14 @@
 #ifndef FSM_H
 #define FSM_H
 
+// RFC: 3 states
 typedef enum {
     NON_MEMBER,
     DELAYING_MEMBER,
     IDLE_MEMBER
 } GroupState;
 
+// RFC: 5 events
 typedef enum {
     EV_JOIN_GROUP,
     EV_LEAVE_GROUP,

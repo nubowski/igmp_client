@@ -18,6 +18,7 @@ void start_igmp_listener(const ClientConfig *cfg) {
         exit(1);
     }
 
+    // RFC: IGMP messages are received on the same interface used to send them
     if (setsockopt(sock, SOL_SOCKET, SO_BINDTODEVICE, cfg->interface, strlen(cfg->interface)) < 0) {
         perror("SO_BINDTODEVICE (recv)");
         close(sock);
@@ -42,9 +43,13 @@ void start_igmp_listener(const ClientConfig *cfg) {
         size_t ip_hdr_len = ip->ihl * 4;
 
         // TODO: try to work around with safy cozy cast checks ~ if (len > 0) => size_t len_u = (size_t)len
+        // RFC: Ensure IGMP protocol (though we're filtering IPPROTO_IGMP already)
         if (ip->protocol != IPPROTO_IGMP) continue;
+
+        // RFC: Minimum IGMP packet should fit in payload
         if ((size_t)len <= ip_hdr_len) continue;                // its always positive i guess atm
 
+        // Skip IP header and pass IGMP payload
         uint8_t *igmp_payload = buffer + ip_hdr_len;
         size_t igmp_len = len - ip_hdr_len;
 
