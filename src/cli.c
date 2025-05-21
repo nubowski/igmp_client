@@ -69,32 +69,46 @@ static void cmd_print(const char *args) {
 
 static void cmd_help(const char *args) {
     (void)args;
-    printf("Available commands:\n");
+
+    printf(ANSI_CYAN "\n\n=== IGMP Client Command Help ===\n\n" ANSI_RESET);
+
+    int max_len = 0;
     for (int i = 0; i < command_count; i++) {
-        printf(" - %s: %s\n", commands[i].name, commands[i].desc);
+        int len = (int)strlen(commands[i].name);
+        if (len > max_len) max_len = len;
     }
+
+    printf(ANSI_BOLD "  %-*s  - %s\n", max_len, "Command", "Description" ANSI_RESET);
+    printf(ANSI_BOLD "  %-*s  - %s\n", max_len, "-------", "-----------" ANSI_RESET);
+
+    for (int i = 0; i < command_count; i++) {
+        printf("  %-*s  - %s\n", max_len, commands[i].name, commands[i].desc);
+    }
+
+    printf(ANSI_YELLOW "\nType a command and hit Enter. Example: `add 239.1.1.1`\n" ANSI_RESET);
+    printf("Use `exit` to quit.\n\n");
 }
 
 static void cmd_exit(const char *args) {
     (void)args;
-    printf("Shutting down...\n");
+    printf(ANSI_GREEN "Shutting down...\n" ANSI_RESET);
     exit(0);
 }
 
 static void cmd_set_resp(const char *args) {
     if (!args) {
-        printf("Usage: set_resp <ms> [1-255000]\n");
+        printf(ANSI_RED "Usage: set_resp <ms> [1-255000]\n" ANSI_RESET);
         return;
     }
 
     int val = 0;
     if (!parse_int(args, &val) || val < 1 || val > 255000) {
-        printf("Invalid response time. Must be integer in range [1-255000]\n");
+        printf(ANSI_RED "Invalid response time. Must be integer in range [1-255000]\n" ANSI_RESET);
         return;
     }
 
     fsm_set_max_response_time(val);
-    printf("Response time set to %dms\n", val);
+    printf(ANSI_GREEN "Response time set to %dms\n" ANSI_RESET, val);
 }
 
 // --- CLI loop thread --- //

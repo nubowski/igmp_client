@@ -53,14 +53,20 @@ int random_uniform(int max) {
 }
 
 void print_startup_info(const ClientConfig *cfg, int max_resp_time, int is_v1_enabled) {
-    // Sexy startup banner
-    printf("\n================ IGMPv2 Client =================\n");
-    printf(" Interface       : %s\n", cfg->interface);
-    printf(" Multicast groups:\n");
+    printf(ANSI_BOLD ANSI_CYAN "\n╔═══════════════════════════════════════════════╗\n");
+    printf("║               IGMPv2 Client Started           ║\n");
+    printf("╠═══════════════════════════════════════════════╣\n" ANSI_RESET);
+
+    printf(ANSI_YELLOW " Interface       " ANSI_RESET ": %s\n", cfg->interface);
+
+    printf(ANSI_YELLOW " Multicast groups" ANSI_RESET ":\n");
     for (int i = 0; i < cfg->group_count; i++) {
-        printf("   - %s\n", cfg->groups[i]);
+        printf("   " ANSI_GREEN "•" ANSI_RESET " %s\n", cfg->groups[i]);
     }
-    printf(" Max Resp Time   : %d ms\n", max_resp_time);
-    printf(" IGMPv1 Suppress : %s\n", is_v1_enabled ? "ENABLED" : "DISABLED");
-    printf("===============================================\n\n");
+
+    printf(ANSI_YELLOW " Max Resp Time   " ANSI_RESET ": %d ms\n", max_resp_time);
+    printf(ANSI_YELLOW " IGMPv1 Suppress " ANSI_RESET ": %s\n",
+           is_v1_enabled ? ANSI_GREEN "ENABLED" ANSI_RESET : ANSI_MAGENTA "DISABLED" ANSI_RESET);
+
+    printf(ANSI_BOLD ANSI_CYAN "╚═══════════════════════════════════════════════╝\n\n" ANSI_RESET);
 }
