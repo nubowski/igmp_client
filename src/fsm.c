@@ -89,7 +89,7 @@ static const FsmEntry fsm_map[3][5] = {
     [IDLE_MEMBER] = {
         [EV_JOIN_GROUP]     = { IDLE_MEMBER,        action_nop },
         [EV_LEAVE_GROUP]    = { NON_MEMBER,         action_leave },
-        [EV_QUERY_RECEIVED] = { DELAYING_MEMBER,    action_join },
+        [EV_QUERY_RECEIVED] = { DELAYING_MEMBER,    action_reset_timer },
         [EV_TIMER_EXPIRED]  = { IDLE_MEMBER,        action_nop },
         [EV_REPORT_RECEIVED]= { IDLE_MEMBER,        action_nop },
     }
