@@ -7,6 +7,7 @@
 #include <sys/socket.h>
 #include <stdint.h>
 #include <unistd.h>
+#include <net/if.h>
 
 #include "igmp.h"
 #include "fsm.h"

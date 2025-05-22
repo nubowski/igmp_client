@@ -9,6 +9,7 @@
 #include "cli.h"
 #include "fsm.h"
 #include "utils.h"
+#include "igmp_subscribe.h"
 
 // CLI help
 void print_usage(const char *prog) {
@@ -25,14 +26,14 @@ int main(int argc, char *argv[]) {
         {0, 0, 0, 0}
     };
 
-    ClientConfig config = {0};
+    ClientConfig cfg = {0};
 
     int opt;
     while ((opt = getopt_long(argc, argv, "i:g:t:", long_options, NULL)) != -1) {
         switch (opt) {
             case 'i':
                 // our working IGMP iface
-                strncpy(config.interface, optarg, sizeof(config.interface) - 1);
+                strncpy(cfg.interface, optarg, sizeof(cfg.interface) - 1);
                 break;
             case 'g':
                 // args count (`optarg`) + how many after `-g`
@@ -47,7 +48,7 @@ int main(int argc, char *argv[]) {
 
                 for (int i = 0; i < group_argc; i++) {
                     const char *ip = (i == 0) ? optarg : argv[optind++];
-                    if (config.group_count >= MAX_GROUPS) {
+                    if (cfg.group_count >= MAX_GROUPS) {
                         fprintf(stderr, "Too many groups (max %d)\n", MAX_GROUPS);
                         exit(1);
                     }
@@ -55,8 +56,8 @@ int main(int argc, char *argv[]) {
                         fprintf(stderr, "Invalid IP address: %s\n", ip);
                         exit(1);
                     }
-                    strncpy(config.groups[config.group_count], ip, sizeof(config.groups[0]) - 1);
-                    config.group_count++;
+                    strncpy(cfg.groups[cfg.group_count], ip, sizeof(cfg.groups[0]) - 1);
+                    cfg.group_count++;
                 }
                 break;
             case 't':
@@ -77,20 +78,31 @@ int main(int argc, char *argv[]) {
         }
     }
 
+    // === Bootstrap === //
+
     // Base validation
-    if (config.interface[0] == '\0' || config.group_count == 0) {
+    if (cfg.interface[0] == '\0' || cfg.group_count == 0) {
         print_usage(argv[0]);
         return 1;
     }
 
+    // Init socket
+    if (init_igmp_socket(cfg.interface) != 0) {
+        fprintf(stderr, "Failed to initialize IGMP socket\n");
+        return 1;
+    }
 
-    // Bootstrap
-    print_status_info(&config, get_max_response_time(), is_igmpv1_enabled());
+    for (int i = 0; i < cfg.group_count; i++) {
+        if (igmp_subscribe(cfg.groups[i], cfg.interface) != 0) {
+            fprintf(stderr, "Failed to subscribe to %s\n", cfg.groups[i]);
+        }
+    }
 
-    fsm_set_iface(config.interface);
-    send_igmp_reports(&config);
+    print_status_info(&cfg, get_max_response_time(), is_igmpv1_enabled());
+    fsm_set_iface(cfg.interface);
+    send_igmp_reports(&cfg);
     start_fsm_timer_loop();
     start_cli_loop();               // important to start cli stdin thread before listener
-    start_igmp_listener(&config);
+    start_igmp_listener();
     return 0;
 }

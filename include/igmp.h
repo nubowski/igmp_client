@@ -19,7 +19,7 @@ typedef struct {
 void send_igmp_leave(const char *group_ip, const char *interface);
 void send_igmp_reports(const ClientConfig *cfg);
 void send_igmp_report(const char *group_ip, const char *interface);
-void start_igmp_listener(const ClientConfig *cfg);           // TODO: drop it outside to net.h
+void start_igmp_listener();                      // TODO: drop it outside to net.h
 void handle_igmp_packet(const uint8_t *data, size_t len);
 
 #endif //IGMP_H

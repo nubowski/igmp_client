@@ -1,5 +1,4 @@
 #include <stdio.h>
-#include <string.h>
 #include <stdlib.h>
 #include <unistd.h>
 #include <sys/socket.h>
@@ -8,29 +7,17 @@
 #include <netinet/igmp.h>
 
 #include "igmp.h"
+#include "igmp_subscribe.h"
 
 #define BUFFER_SIZE 1500           // MTU -> 1500 bytes
 
-void start_igmp_listener(const ClientConfig *cfg) {
-    int sock = socket(AF_INET, SOCK_RAW, IPPROTO_IGMP); // TTL = 1 already
-    if (sock < 0) {
-        perror("listener socket");
-        exit(1);
-    }
-
-    // RFC: IGMP messages are received on the same interface used to send them
-    if (setsockopt(sock, SOL_SOCKET, SO_BINDTODEVICE, cfg->interface, strlen(cfg->interface)) < 0) {
-        perror("SO_BINDTODEVICE (recv)");
-        close(sock);
-        exit(1);
-    }
-
-    printf("[INFO] Listening for IGMP packets on %s...\n", cfg->interface);
+void start_igmp_listener() {
+    int sock = get_igmp_socket();
+    printf("[INFO] Listening for IGMP packets...\n");
 
     while (1) {
         uint8_t buffer[BUFFER_SIZE];
         ssize_t len = recv(sock, buffer, sizeof(buffer), 0);
-
         if (len < 0) {
             perror("recv");
             continue;
@@ -39,19 +26,13 @@ void start_igmp_listener(const ClientConfig *cfg) {
         struct iphdr *ip = (struct iphdr *)buffer;
         size_t ip_hdr_len = ip->ihl * 4;
 
-        // TODO: try to work around with safy cozy cast checks ~ if (len > 0) => size_t len_u = (size_t)len
-        // RFC: Ensure IGMP protocol (though we're filtering IPPROTO_IGMP already)
-        if (ip->protocol != IPPROTO_IGMP) continue;
-
         // RFC: Minimum IGMP packet should fit in payload
-        if ((size_t)len <= ip_hdr_len) continue;                // its always positive i guess atm
+        // RFC: Ensure IGMP protocol (though we're filtering IPPROTO_IGMP already)
+        if (ip->protocol != IPPROTO_IGMP || (size_t)len <= ip_hdr_len) continue;
 
         // Skip IP header and pass IGMP payload
         uint8_t *igmp_payload = buffer + ip_hdr_len;
         size_t igmp_len = len - ip_hdr_len;
-
         handle_igmp_packet(igmp_payload, igmp_len);
     }
-
-    close(sock);
 }

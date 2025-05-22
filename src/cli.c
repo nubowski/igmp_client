@@ -7,6 +7,7 @@
 #include "igmp.h"
 #include "fsm.h"
 #include "cli.h"
+#include "igmp_subscribe.h"
 #include "utils.h"
 
 // func ptr
@@ -56,7 +57,9 @@ static void cmd_add(const char *args) {
 
     GroupInfo *g = find_or_create_group(args);
     if (g) {
-        handle_event(g, EV_JOIN_GROUP);
+        if (igmp_subscribe(args, get_iface_name()) == 0) {
+            handle_event(g, EV_JOIN_GROUP);
+        }
     }
 }
 
@@ -73,6 +76,7 @@ static void cmd_del(const char *args) {
     }
 
     handle_event(g, EV_LEAVE_GROUP);
+    igmp_unsubscribe(args, get_iface_name());
 
     if (remove_group(args)) {
         printf("Group %s removed from list.\n", args);
@@ -94,6 +98,7 @@ static void cmd_stop(const char *args) {
     }
 
     handle_event(g, EV_LEAVE_GROUP);
+    igmp_unsubscribe(args, get_iface_name());
 }
 
 static void cmd_print(const char *args) {
