@@ -37,7 +37,7 @@ static CliCommand commands[] = {
     { "exit",       "Exit the application",                             cmd_exit },
     { "set_timer",  "Set max response time in ms (set_timer <ms>)",     cmd_set_resp },
     { "status",     "Show current status",                              cmd_status },
-    { "stop",     "Leave multicast group (stop <ip>)",                  cmd_stop },
+    { "stop",       "Leave multicast group (stop <ip>)",                cmd_stop },
 };
 
 static const int command_count = sizeof(commands) / sizeof(commands[0]);

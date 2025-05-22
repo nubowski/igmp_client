@@ -189,6 +189,10 @@ void handle_igmp_packet(const uint8_t *data, size_t len) {
             }
             break;
 
+        case IGMP_TYPE_LEAVE_GROUP:                              // 0x17
+            // Ignoring Leave reports completely
+            break;
+
         default:
             printf("[RECV] Unknown IGMP type: 0x%02x\n", pkt->igmp_type);
             break;
