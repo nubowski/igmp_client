@@ -1,6 +1,7 @@
 #include <stdio.h>
 #include <stdlib.h>
 #include <string.h>
+#include <time.h>
 #include <arpa/inet.h>
 #include <netinet/ip.h>
 #include <netinet/igmp.h>
@@ -9,8 +10,9 @@
 
 #define DEFAULT_GROUP "0.0.0.0"
 #define INTERFACE "eth0"
-#define QUERY_INTERVAL_SEC 4
-#define REPEAT_COUNT 30
+#define QUERY_INTERVAL_SEC 5
+#define REPEAT_COUNT 4
+#define RANDOM 1
 
 static uint16_t checksum(void *data, size_t len) {
     uint16_t sum = 0;
@@ -46,70 +48,70 @@ int main(int argc, char *argv[]) {
         groups[0] = DEFAULT_GROUP;
     }
 
+    srand(time(NULL));
+
     for (int i = 0; i < REPEAT_COUNT; i++) {
-        for (int g = 0; g < group_count; g++) {
-            const char *group = groups[g];
+        int g = 0;
 
-            struct in_addr group_addr = {0};
-            if (inet_pton(AF_INET, group, &group_addr) != 1) {
-                fprintf(stderr, "[TEST] Invalid IP adress: %s\n", group);
-                continue;
-            }
+#if RANDOM
+        g = rand() % group_count;
+#else
+        g = i % group_count;
+#endif
 
-            // RFC: General Query -> send to 224.0.0.1 with group field = 0.0.0.0
-            int is_generar_query = (strcmp(group, "0.0.0.0") == 0);
-            const char *dst_ip = is_generar_query ? "224.0.0.1" : group;
+        const char *group = groups[g];
 
-            printf("[TEST] Sending IGMPv2 %s Query to %s (group field: %s) via %s\n",
-                is_generar_query ? "General" : "Group-Specific", dst_ip, group, INTERFACE);
+        struct in_addr group_addr = {0};
+        if (inet_pton(AF_INET, group, &group_addr) != 1) {
+            fprintf(stderr, "[TEST] Invalid IP address: %s\n", group);
+            continue;
+        }
+        int is_general_query = (strcmp(group, "0.0.0.0") == 0);
+        const char *dst_ip = is_general_query ? "224.0.0.1" : group;
 
-            int sock = socket(AF_INET, SOCK_RAW, IPPROTO_IGMP);
-            if (sock < 0) {
-                perror("socket");
-                free(groups);
-                return 1;
-            }
+        printf("[TEST] Sending IGMPv2 %s Query to %s (group field: %s) via %s\n",
+               is_general_query ? "General" : "Group-Specific", dst_ip, group, INTERFACE);
 
-            if (setsockopt(sock, SOL_SOCKET, SO_BINDTODEVICE, INTERFACE, strlen(INTERFACE)) < 0) {
-                perror("SO_BINDTODEVICE");
-                close(sock);
-                free(groups);
-                return 1;
-            }
-
-            // RFC: Multicast TTL = 1 || Just in case, coz its SHOULD be TTL = 1 on IPPROTO_IGMP
-            uint8_t ttl = 1;
-            if (setsockopt(sock, IPPROTO_IP, IP_MULTICAST_TTL, &ttl, sizeof(ttl)) < 0) {
-                perror("setsockopt: IP_MULTICAST_TTL");
-                close(sock);
-                free(groups);
-                return 1;
-            }
-
-            struct igmp msg = {0};
-            msg.igmp_type = 0x11;
-            msg.igmp_code = 20;                                 // Max Resp Time (20 * 100ms = 2s)
-            inet_pton(AF_INET, group, &msg.igmp_group);
-            msg.igmp_cksum = checksum(&msg, sizeof(msg));
-
-            struct sockaddr_in dst = {0};
-            dst.sin_family = AF_INET;
-            inet_pton(AF_INET, dst_ip, &dst.sin_addr);
-
-            ssize_t sent = sendto(sock, &msg, sizeof(msg), 0, (struct sockaddr*)&dst, sizeof(dst));
-            if (sent < 0) {
-                perror("sendto");
-            } else {
-                printf("[TEST] IGMPv2 Query sent to %s (group field: %s)\n", dst_ip, group);
-            }
-
-            close(sock);
+        int sock = socket(AF_INET, SOCK_RAW, IPPROTO_IGMP);
+        if (sock < 0) {
+            perror("socket");
+            free(groups);
+            return 1;
         }
 
+        if (setsockopt(sock, SOL_SOCKET, SO_BINDTODEVICE, INTERFACE, strlen(INTERFACE)) < 0) {
+            perror("SO_BINDTODEVICE");
+            close(sock);
+            free(groups);
+            return 1;
+        }
+
+        uint8_t ttl = 1;
+        if (setsockopt(sock, IPPROTO_IP, IP_MULTICAST_TTL, &ttl, sizeof(ttl)) < 0) {
+            perror("setsockopt: IP_MULTICAST_TTL");
+            close(sock);
+            free(groups);
+            return 1;
+        }
+
+        struct igmp msg = {0};
+        msg.igmp_type = 0x11;
+        msg.igmp_code = 20;
+        inet_pton(AF_INET, group, &msg.igmp_group);
+        msg.igmp_cksum = checksum(&msg, sizeof(msg));
+
+        struct sockaddr_in dst = {0};
+        dst.sin_family = AF_INET;
+        inet_pton(AF_INET, dst_ip, &dst.sin_addr);
+
+        ssize_t sent = sendto(sock, &msg, sizeof(msg), 0, (struct sockaddr*)&dst, sizeof(dst));
+        if (sent < 0) {
+            perror("sendto");
+        } else {
+            printf("[TEST] IGMPv2 Query sent to %s (group field: %s)\n", dst_ip, group);
+        }
+
+        close(sock);
         sleep(QUERY_INTERVAL_SEC);
     }
-
-    free(groups);
-    printf("[TEST] Done\n");
-    return 0;
 }
